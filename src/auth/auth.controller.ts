@@ -1,9 +1,9 @@
-import { Body, Controller, Get, HttpCode, HttpStatus, Post, Request, UseGuards } from '@nestjs/common';
+import { Body, Controller, Get, HttpCode, HttpStatus, Post, Request } from '@nestjs/common';
 import { AuthService } from './auth.service';
-import { JwtAuthGuard } from './auth.guard';
 import { UserService } from 'src/user/user.service';
-import { LoginRequestDto } from './dto/login-request.dto';
-import { AuthResponseDto } from './dto/auth-response';
+import { LoginDto } from './dto/login-request.dto';
+import { CreateUserDto } from 'src/user/dto/create-user.dto';
+import { Public } from 'src/common/decorators/public.decorator';
 
 @Controller('auth')
 export class AuthController {
@@ -11,17 +11,23 @@ export class AuthController {
     constructor(private readonly authService: AuthService, private readonly userService: UserService) { }
 
     @HttpCode(HttpStatus.OK)
+    @Public()
     @Post('login')
-    async login(@Body() credentials: LoginRequestDto): Promise<AuthResponseDto> {
+    async login(@Body() credentials: LoginDto) {
         return this.authService.login(credentials);
+    }
+
+    @HttpCode(HttpStatus.OK)
+    @Public()
+    @Post('register')
+    async register(@Body() data: CreateUserDto) {
+        return this.authService.register(data);
     }
 
 
     @Get('profile')
-    @UseGuards(JwtAuthGuard)
     async getProfile(@Request() Request) {
-        const user = await this.userService.findOne(Request.user.userId);
-        console.log("USER CONNECTED : ", Request.user.userId);
+        const user = await this.userService.findById(Request.user.userId);
         return user;
     }
 }

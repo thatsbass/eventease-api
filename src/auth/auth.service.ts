@@ -1,38 +1,42 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, UnauthorizedException } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { compare, hash } from 'bcrypt';
-import { PrismaService } from 'src/prisma.service';
-import { LoginRequestDto } from './dto/login-request.dto';
-import { UserPayload } from './jwt.strategy';
-import { AuthResponseDto } from './dto/auth-response';
+import { UserService } from 'src/user/user.service';
+import { LoginDto } from './dto/login-request.dto';
+import { CreateUserDto } from 'src/user/dto/create-user.dto';
+import { APP_MESSAGES } from 'src/common/constants/message.constant';
 
 
 
 @Injectable()
 export class AuthService {
 
-    constructor(private readonly prismaService: PrismaService, private readonly jwtService: JwtService) { }
+    constructor(private readonly userService: UserService, private readonly jwtService: JwtService) { }
 
-    async login(credentials: LoginRequestDto): Promise<AuthResponseDto> {
+    async login(credentials: LoginDto) {
         const { email, password } = credentials;
-        const existingUser = await this.prismaService.user.findUnique({
-            where: {
-                email,
-            }
-        })
-        if (!existingUser) {
-            throw new Error('User not found');
+        const user = await this.userService.findByEmail(email);
+        if (!user) {
+            throw new UnauthorizedException(APP_MESSAGES.INVALID_CREDENTIALS);
         }
-        const isPasswordValid = await this.comparePassword(password, existingUser.password);
+        const match = await this.comparePassword(password, user.password);
+        if (!match) throw new UnauthorizedException(APP_MESSAGES.INVALID_CREDENTIALS);
 
-        if (!isPasswordValid) {
-            throw new Error('Email or password is incorrect');
-        }
-        // --- Generate TOKEN --
-        const token = this.authentificateUser({ userId: existingUser.id });
+        const token = this.signInUser({ userId: user.id, email: user.email });
         return token;
+    }
 
 
+    async register(data: CreateUserDto) {
+        const { name, email, password } = data;
+        const user = await this.userService.findByEmail(email);
+        if (user) {
+            throw new UnauthorizedException(APP_MESSAGES.EMAIL_ALREADY_EXISTS);
+        }
+        const hashedPassword = await this.hashPassword(password);
+        const createdUser = await this.userService.create({ name, email, password: hashedPassword });
+        const token = this.signInUser({ userId: createdUser.id, email: createdUser.email });
+        return token;
     }
 
 
@@ -46,8 +50,8 @@ export class AuthService {
         return isPasswordValid;
     }
 
-    private authentificateUser({ userId }: UserPayload) {
-        const payload: UserPayload = { userId };
+    private signInUser({ userId, email }: { userId: string, email: string }) {
+        const payload = { email, userId };
         return {
             access_token: this.jwtService.sign(payload),
         };
