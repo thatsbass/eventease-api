@@ -2,13 +2,14 @@ import { Module } from '@nestjs/common';
 import { UserModule } from './user/user.module';
 import { AuthModule } from './auth/auth.module';
 import { ConfigModule } from '@nestjs/config';
+import { CommonModule } from './common/common.module';
 
 
 @Module({
   imports: [ConfigModule.forRoot({
     isGlobal: true,
     envFilePath: '.env'
-  }), UserModule, AuthModule],
+  }), UserModule, AuthModule, CommonModule],
   providers: [],
 })
 export class AppModule { }
