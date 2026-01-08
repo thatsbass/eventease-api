@@ -1,16 +1,16 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
-import { PrismaService } from 'src/prisma.service';
+import { PrismaService } from 'src/database/prisma.service';
 import { CreateUserDto } from './dto/create-user.dto';
 
 
 @Injectable()
 export class UserService {
-    constructor(private readonly prismaService: PrismaService) {}
+    constructor(private readonly prismaService: PrismaService) { }
 
     async findAll() {
         const users = await this.prismaService.user.findMany();
         const rest = users.map(user => {
-            const {password, ...rest} = user;
+            const { password, ...rest } = user;
             return rest;
         })
         return rest;
@@ -40,7 +40,7 @@ export class UserService {
         if (!user) {
             throw new NotFoundException('User not found');
         }
-        const {password, ...rest} = user;
+        const { password, ...rest } = user;
         return rest;
     }
 

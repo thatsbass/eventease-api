@@ -22,7 +22,6 @@ export class AuthService {
         const match = await this.comparePassword(password, user.password);
         if (!match) throw new UnauthorizedException(APP_MESSAGES.INVALID_CREDENTIALS);
 
-        // --- Generate TOKEN --
         const token = this.signInUser({ userId: user.id, email: user.email });
         return token;
     }
@@ -30,7 +29,6 @@ export class AuthService {
 
     async register(data: CreateUserDto) {
         const { name, email, password } = data;
-        console.log(name, email, password);
         const user = await this.userService.findByEmail(email);
         if (user) {
             throw new UnauthorizedException(APP_MESSAGES.EMAIL_ALREADY_EXISTS);

@@ -1,6 +1,5 @@
-import { Body, Controller, Get, HttpCode, HttpStatus, Post, Request, UseGuards } from '@nestjs/common';
+import { Body, Controller, Get, HttpCode, HttpStatus, Post, Request } from '@nestjs/common';
 import { AuthService } from './auth.service';
-// import { JwtAuthGuard } from './auth.guard';
 import { UserService } from 'src/user/user.service';
 import { LoginDto } from './dto/login-request.dto';
 import { CreateUserDto } from 'src/user/dto/create-user.dto';
@@ -22,14 +21,12 @@ export class AuthController {
     @Public()
     @Post('register')
     async register(@Body() data: CreateUserDto) {
-        console.log("Data", data);
         return this.authService.register(data);
     }
 
 
     @Get('profile')
     async getProfile(@Request() Request) {
-        console.log(Request.user);
         const user = await this.userService.findById(Request.user.userId);
         return user;
     }
