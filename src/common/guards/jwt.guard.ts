@@ -2,6 +2,7 @@ import { Injectable, UnauthorizedException } from "@nestjs/common";
 import { CanActivate, ExecutionContext } from "@nestjs/common";
 import { JwtService } from "@nestjs/jwt";
 import { Reflector } from "@nestjs/core";
+import { APP_MESSAGES } from "../constants/message.constant";
 
 @Injectable()
 export class JwtGuard implements CanActivate {
@@ -16,13 +17,13 @@ export class JwtGuard implements CanActivate {
 
     const req = context.switchToHttp().getRequest();
     const token = req.headers.authorization?.split(' ')[1];
-    if (!token) throw new UnauthorizedException();
+    if (!token) throw new UnauthorizedException(APP_MESSAGES.UNAUTHORIZED);
 
     try {
       req.user = this.jwt.verify(token);
       return true;
     } catch {
-      throw new UnauthorizedException();
+      throw new UnauthorizedException(APP_MESSAGES.UNAUTHORIZED);
     }
   }
 }
