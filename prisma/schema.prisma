@@ -14,8 +14,25 @@ datasource db {
 
 
 model User {
-  id    String @id @default(cuid())
-  name  String
-  email String @unique
-  password String
+  id        String   @id @default(uuid())
+  email     String   @unique
+  password  String
+  fullName  String   
+  phone     String   @unique
+  role      Role     @relation(fields: [roleId], references: [id])
+  roleId    String
+  createdAt DateTime @default(now())
+}
+
+model Role {
+  id          String        @id @default(uuid())
+  name        String        @unique
+  permissions Permission[]
+  users       User[]
+}
+
+model Permission {
+  id    String @id @default(uuid())
+  name  String @unique
+  roles Role[]
 }
